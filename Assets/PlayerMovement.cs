@@ -15,11 +15,6 @@ public class PlayerMovement : NetworkBehaviour
     public float gravity = 9.81f;
     private float jumpForce = 8f;
 
-    public Transform playerCamera;
-    public float lookSpeed = 2f;
-
-    private float rotationX = 0;
-
     public override void OnNetworkSpawn()
     {
         randomnumber.OnValueChanged += (int previousValue, int newValue) =>
@@ -35,7 +30,6 @@ public class PlayerMovement : NetworkBehaviour
         if (!IsOwner) return;
 
         HandleMovementInput();
-        HandleMouseLook(); // Add mouse look handling
         HandleJumpInput();
         ApplyGravity();
     }
@@ -46,7 +40,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         float moveSpeed = 3f;
 
-        // Check if the Shift key is pressed for sprinting
+    
         if (Input.GetKey(KeyCode.LeftShift))
         {
             Sprint(moveSpeed);
@@ -63,37 +57,21 @@ public class PlayerMovement : NetworkBehaviour
 
         if (moveDir != Vector3.zero)
         {
-            characterController.Move(transform.TransformDirection(moveDir) * moveSpeed * Time.deltaTime);
+            characterController.Move(moveDir * moveSpeed * Time.deltaTime);
         }
     }
 
     private void Sprint(float moveSpeed)
     {
-        // Sprint speed multiplier
+      
         float sprintMultiplier = 2f;
 
         Vector3 moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
 
         if (moveDir != Vector3.zero)
         {
-            characterController.Move(transform.TransformDirection(moveDir) * moveSpeed * sprintMultiplier * Time.deltaTime);
+            characterController.Move(moveDir * moveSpeed * sprintMultiplier * Time.deltaTime);
         }
-    }
-
-    #endregion
-
-    #region Look (Mouse)
-
-    private void HandleMouseLook()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * lookSpeed;
-        float mouseY = -Input.GetAxis("Mouse Y") * lookSpeed;
-
-        rotationX += mouseY;
-        rotationX = Mathf.Clamp(rotationX, -90f, 90f);
-
-        playerCamera.localRotation = Quaternion.Euler(rotationX, 0, 0);
-        transform.rotation *= Quaternion.Euler(0, mouseX, 0);
     }
 
     #endregion
@@ -104,7 +82,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (characterController.isGrounded)
         {
-          
+
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 verticalSpeed = jumpForce;
@@ -121,7 +99,7 @@ public class PlayerMovement : NetworkBehaviour
        
         verticalSpeed -= gravity * Time.deltaTime;
 
-     
+      
         characterController.Move(new Vector3(0, verticalSpeed, 0) * Time.deltaTime);
     }
 
