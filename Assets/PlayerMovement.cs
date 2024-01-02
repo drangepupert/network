@@ -17,8 +17,8 @@ public class PlayerMovement : NetworkBehaviour
 
     private float rotationX = 0f;
 
-    private Camera playerCamera; 
-    private bool isCameraOwner;  
+    private Camera playerCamera; // Reference to the player's camera
+    private bool isCameraOwner;  // Flag to check camera ownership
 
     public override void OnNetworkSpawn()
     {
@@ -29,18 +29,18 @@ public class PlayerMovement : NetworkBehaviour
 
         characterController = GetComponent<CharacterController>();
 
-        
+        // Check if the camera has been instantiated
         if (playerCamera == null)
         {
-           
+            // Instantiate a new camera only for the local player
             if (IsOwner)
             {
                 playerCamera = new GameObject("PlayerCamera").AddComponent<Camera>();
                 playerCamera.transform.parent = transform;
-                playerCamera.transform.localPosition = new Vector3(0f, 1.5f, 0f); 
-                playerCamera.gameObject.AddComponent<AudioListener>(); 
+                playerCamera.transform.localPosition = new Vector3(0f, 1.5f, 0f); // Adjust position based on your preference
+                playerCamera.gameObject.AddComponent<AudioListener>(); // Optional: Add AudioListener for audio in the scene
 
-                
+                // Optionally, you can disable the original camera (if any) that might be in the prefab
                 Camera[] cameras = GetComponentsInChildren<Camera>();
                 foreach (Camera cam in cameras)
                 {
@@ -85,20 +85,16 @@ public class PlayerMovement : NetworkBehaviour
 
     private void MoveAccordingToCamera(float moveSpeed)
     {
-       
         Vector3 forward = playerCamera.transform.forward;
         Vector3 right = playerCamera.transform.right;
 
-       
         forward.y = 0f;
         right.y = 0f;
         forward.Normalize();
         right.Normalize();
 
-        
         Vector3 moveDir = forward * Input.GetAxis("Vertical") + right * Input.GetAxis("Horizontal");
 
-       
         if (moveDir != Vector3.zero)
         {
             characterController.Move(moveDir * moveSpeed * Time.deltaTime);
@@ -109,13 +105,16 @@ public class PlayerMovement : NetworkBehaviour
     {
         float sprintMultiplier = 2f;
 
-        Vector3 moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+        // Use the player's forward and right directions to calculate the movement direction
+        Vector3 moveDir = (transform.forward * Input.GetAxis("Vertical") + transform.right * Input.GetAxis("Horizontal")).normalized;
 
+        // Apply sprinting speed
         if (moveDir != Vector3.zero)
         {
             characterController.Move(moveDir * moveSpeed * sprintMultiplier * Time.deltaTime);
         }
     }
+
 
     #endregion
 
