@@ -105,7 +105,7 @@ public class PlayerMovement : NetworkBehaviour
     {
         float sprintMultiplier = 2f;
 
-        // Use the player's forward and right directions to calculate the movement direction
+        // cum
         Vector3 moveDir = (transform.forward * Input.GetAxis("Vertical") + transform.right * Input.GetAxis("Horizontal")).normalized;
 
         // Apply sprinting speed
