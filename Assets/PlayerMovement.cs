@@ -9,11 +9,16 @@ using UnityEngine;
 public class PlayerMovement : NetworkBehaviour
 {
     private NetworkVariable<int> randomnumber = new NetworkVariable<int>(1, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
     private CharacterController characterController;
     private float verticalSpeed = 0f;
     public float gravity = 9.81f;
     private float jumpForce = 8f;
+    public float mouseSensitivity = 2f;
+
+    private float rotationX = 0f;
+
+    private Camera playerCamera;
+    private bool isCameraOwner;  
 
     public override void OnNetworkSpawn()
     {
@@ -23,12 +28,40 @@ public class PlayerMovement : NetworkBehaviour
         };
 
         characterController = GetComponent<CharacterController>();
+
+     
+        if (playerCamera == null)
+        {
+     
+            if (IsOwner)
+            {
+                playerCamera = new GameObject("PlayerCamera").AddComponent<Camera>();
+                playerCamera.transform.parent = transform;
+                playerCamera.transform.localPosition = new Vector3(0f, 1.5f, 0f); 
+                playerCamera.gameObject.AddComponent<AudioListener>(); 
+
+              
+                Camera[] cameras = GetComponentsInChildren<Camera>();
+                foreach (Camera cam in cameras)
+                {
+                    if (cam != playerCamera)
+                    {
+                        cam.gameObject.SetActive(false);
+                    }
+                }
+
+                isCameraOwner = true;
+            }
+        }
+
+    
     }
 
     private void Update()
     {
         if (!IsOwner) return;
 
+        HandleMouseLook();
         HandleMovementInput();
         HandleJumpInput();
         ApplyGravity();
@@ -40,21 +73,32 @@ public class PlayerMovement : NetworkBehaviour
     {
         float moveSpeed = 3f;
 
-    
         if (Input.GetKey(KeyCode.LeftShift))
         {
             Sprint(moveSpeed);
         }
         else
         {
-            MoveNormally(moveSpeed);
+            MoveAccordingToCamera(moveSpeed);
         }
     }
 
-    private void MoveNormally(float moveSpeed)
+    private void MoveAccordingToCamera(float moveSpeed)
     {
-        Vector3 moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
+       
+        Vector3 forward = playerCamera.transform.forward;
+        Vector3 right = playerCamera.transform.right;
 
+      
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+
+      
+        Vector3 moveDir = forward * Input.GetAxis("Vertical") + right * Input.GetAxis("Horizontal");
+
+ 
         if (moveDir != Vector3.zero)
         {
             characterController.Move(moveDir * moveSpeed * Time.deltaTime);
@@ -63,7 +107,6 @@ public class PlayerMovement : NetworkBehaviour
 
     private void Sprint(float moveSpeed)
     {
-      
         float sprintMultiplier = 2f;
 
         Vector3 moveDir = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
@@ -82,7 +125,6 @@ public class PlayerMovement : NetworkBehaviour
     {
         if (characterController.isGrounded)
         {
-
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 verticalSpeed = jumpForce;
@@ -96,11 +138,26 @@ public class PlayerMovement : NetworkBehaviour
 
     private void ApplyGravity()
     {
-       
         verticalSpeed -= gravity * Time.deltaTime;
-
-      
         characterController.Move(new Vector3(0, verticalSpeed, 0) * Time.deltaTime);
+    }
+
+    #endregion
+
+    #region MouseLook
+
+    private void HandleMouseLook()
+    {
+        if (!isCameraOwner) return;
+
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        rotationX -= mouseY;
+        rotationX = Mathf.Clamp(rotationX, -90f, 90f);
+
+        playerCamera.transform.localRotation = Quaternion.Euler(rotationX, 0f, 0f);
+        transform.Rotate(Vector3.up * mouseX);
     }
 
     #endregion
