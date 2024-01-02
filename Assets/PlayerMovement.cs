@@ -17,7 +17,7 @@ public class PlayerMovement : NetworkBehaviour
 
     private float rotationX = 0f;
 
-    private Camera playerCamera;
+    private Camera playerCamera; 
     private bool isCameraOwner;  
 
     public override void OnNetworkSpawn()
@@ -29,10 +29,10 @@ public class PlayerMovement : NetworkBehaviour
 
         characterController = GetComponent<CharacterController>();
 
-     
+        
         if (playerCamera == null)
         {
-     
+           
             if (IsOwner)
             {
                 playerCamera = new GameObject("PlayerCamera").AddComponent<Camera>();
@@ -40,7 +40,7 @@ public class PlayerMovement : NetworkBehaviour
                 playerCamera.transform.localPosition = new Vector3(0f, 1.5f, 0f); 
                 playerCamera.gameObject.AddComponent<AudioListener>(); 
 
-              
+                
                 Camera[] cameras = GetComponentsInChildren<Camera>();
                 foreach (Camera cam in cameras)
                 {
@@ -50,11 +50,11 @@ public class PlayerMovement : NetworkBehaviour
                     }
                 }
 
-                isCameraOwner = true;
+                isCameraOwner = true; // Set camera ownership flag
             }
         }
 
-    
+        // Other initialization logic...
     }
 
     private void Update()
@@ -89,16 +89,16 @@ public class PlayerMovement : NetworkBehaviour
         Vector3 forward = playerCamera.transform.forward;
         Vector3 right = playerCamera.transform.right;
 
-      
+       
         forward.y = 0f;
         right.y = 0f;
         forward.Normalize();
         right.Normalize();
 
-      
+        
         Vector3 moveDir = forward * Input.GetAxis("Vertical") + right * Input.GetAxis("Horizontal");
 
- 
+       
         if (moveDir != Vector3.zero)
         {
             characterController.Move(moveDir * moveSpeed * Time.deltaTime);
